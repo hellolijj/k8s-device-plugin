@@ -35,6 +35,29 @@ func getDevices() []*pluginapi.Device {
 	return devs
 }
 
+func getGpuTopology() (map[string]map[string]gpuTopologyType) {
+	n, err := nvml.GetDeviceCount()
+	check(err)
+	topology := make(map[string]map[string]gpuTopologyType)
+	var devs []*nvml.Device
+	
+	for i := uint(0); i < n; i++ {
+		d, err := nvml.NewDeviceLite(i)
+		check(err)
+		devs = append(devs, d)
+	}
+	
+	for i := 0; i < int(n); i++ {
+		for j := 0; j < int(n); j++ {
+			t, err := nvml.GetP2PLink(devs[i], devs[j])
+			check(err)
+			topology[devs[i].UUID] = map[string]gpuTopologyType{devs[j].UUID: gpuTopologyType(t)}
+		}
+	}
+	
+	return topology
+}
+
 func deviceExists(devs []*pluginapi.Device, id string) bool {
 	for _, d := range devs {
 		if d.ID == id {

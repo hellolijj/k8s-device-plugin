@@ -4,29 +4,32 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"path"
 	"strings"
 	"time"
-
+	
+	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/nvml"
+	
+	log "github.com/golang/glog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	pluginapi "k8s.io/kubernetes/pkg/kubelet/apis/deviceplugin/v1beta1"
 )
 
 const (
-	resourceName           = "nvidia.com/gpu"
-	serverSock             = pluginapi.DevicePluginPath + "nvidia.sock"
+	resourceName           = "aliyun.com/gpu-count"
+	serverSock             = pluginapi.DevicePluginPath + "gputopology.sock"
 	envDisableHealthChecks = "DP_DISABLE_HEALTHCHECKS"
 	allHealthChecks        = "xids"
 )
 
 // NvidiaDevicePlugin implements the Kubernetes device plugin API
 type NvidiaDevicePlugin struct {
-	devs   []*pluginapi.Device
-	socket string
+	devs        []*pluginapi.Device
+	socket      string
+	gpuTopology map[string]map[string]gpuTopologyType
 
 	stop   chan interface{}
 	health chan *pluginapi.Device
@@ -34,11 +37,21 @@ type NvidiaDevicePlugin struct {
 	server *grpc.Server
 }
 
+// gpuTopologyType
+type gpuTopologyType nvml.P2PLinkType
+
 // NewNvidiaDevicePlugin returns an initialized NvidiaDevicePlugin
 func NewNvidiaDevicePlugin() *NvidiaDevicePlugin {
+	devs := getDevices()
+	gpuTopology := getGpuTopology()
+
+	log.Infof("Device List: %v", devs)
+	log.Infof("Device Topology: %v", gpuTopology)
+
 	return &NvidiaDevicePlugin{
-		devs:   getDevices(),
-		socket: serverSock,
+		devs:        devs,
+		socket:      serverSock,
+		gpuTopology: gpuTopology,
 
 		stop:   make(chan interface{}),
 		health: make(chan *pluginapi.Device),
@@ -213,18 +226,18 @@ func (m *NvidiaDevicePlugin) healthcheck() {
 func (m *NvidiaDevicePlugin) Serve() error {
 	err := m.Start()
 	if err != nil {
-		log.Printf("Could not start device plugin: %s", err)
+		log.Infof("Could not start device plugin: %s", err)
 		return err
 	}
-	log.Println("Starting to serve on", m.socket)
+	log.Infof("Starting to serve on", m.socket)
 
 	err = m.Register(pluginapi.KubeletSocket, resourceName)
 	if err != nil {
-		log.Printf("Could not register device plugin: %s", err)
+		log.Infof("Could not register device plugin: %s", err)
 		m.Stop()
 		return err
 	}
-	log.Println("Registered device plugin with Kubelet")
+	log.Infof("Registered device plugin with Kubelet")
 
 	return nil
 }

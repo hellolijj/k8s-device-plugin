@@ -1,5 +1,9 @@
 # NVIDIA device plugin for Kubernetes
 
+## 这里是2019 GSoC 项目
+
+考虑 gpu 拓扑性的 gpu 调度
+
 ## Table of Contents
 
 - [About](#about)
