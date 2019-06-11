@@ -1,10 +1,10 @@
 FROM golang:1.10-stretch as build
 
-WORKDIR /go/src/gsoc-device-plugin
+WORKDIR /go/src/github.com/hellolijj/k8s-device-plugin
 COPY . .
 
 RUN export CGO_LDFLAGS_ALLOW='-Wl,--unresolved-symbols=ignore-in-object-files' && \
-go install -ldflags="-s -w" -v gsoc-device-plugin
+go build -ldflags="-s -w" -o /go/bin/gsoc-device-plugin main.go
 
 FROM debian:stretch-slim
 
