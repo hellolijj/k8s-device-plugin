@@ -1,9 +1,9 @@
 package nvidia
 
 import (
+	"log"
 	"os"
 	"syscall"
-	"log"
 
 	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/nvml"
 	"github.com/fsnotify/fsnotify"

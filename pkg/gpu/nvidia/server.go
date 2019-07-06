@@ -9,9 +9,9 @@ import (
 	"path"
 	"strings"
 	"time"
-	
+
 	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/nvml"
-	
+
 	log "github.com/golang/glog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	resourceName           = "aliyun.com/gpu-count"
+	resourceName           = "aliyun.com/gpu"
 	serverSock             = pluginapi.DevicePluginPath + "gputopology.sock"
 	envDisableHealthChecks = "DP_DISABLE_HEALTHCHECKS"
 	allHealthChecks        = "xids"
@@ -27,12 +27,12 @@ const (
 
 // NvidiaDevicePlugin implements the Kubernetes device plugin API
 type NvidiaDevicePlugin struct {
-	devs        []*pluginapi.Device
+	devs         []*pluginapi.Device
 	realDevNames []string
 	devNameMap   map[string]uint
 	devIndxMap   map[uint]string
-	socket      string
-	gpuTopology gpuTopology
+	socket       string
+	gpuTopology  gpuTopology
 
 	stop   chan interface{}
 	health chan *pluginapi.Device
@@ -43,6 +43,30 @@ type NvidiaDevicePlugin struct {
 // gpuTopologyType
 type gpuTopologyType nvml.P2PLinkType
 
+// gpuTopologyType 字符串描述
+func (t gpuTopologyType) String() string {
+	return nvml.P2PLinkType(t).String()
+}
+
+// gpuTopologyType 字符串简称
+func (t gpuTopologyType) Abbreviation() string {
+	switch nvml.P2PLinkType(t) {
+	case nvml.P2PLinkSameBoard:
+		return "PSB"
+	case nvml.P2PLinkSingleSwitch:
+		return "PIX"
+	case nvml.P2PLinkMultiSwitch:
+		return "PXB"
+	case nvml.P2PLinkHostBridge:
+		return "PHB"
+	case nvml.P2PLinkSameCPU:
+		return "NODE"
+	case nvml.P2PLinkCrossCPU:
+		return "SYS"
+	}
+	return "N-A"
+}
+
 // gpuTopology
 type gpuTopology map[uint]map[uint]gpuTopologyType
 
@@ -51,15 +75,21 @@ func NewNvidiaDevicePlugin() *NvidiaDevicePlugin {
 	devs := getDevices()
 	devNameMap := getDevNameMap()
 	devList := []string{}
-	
+
 	for dev, _ := range devNameMap {
 		devList = append(devList, dev)
 	}
-	
+
 	gpuTopology := getGpuTopology()
 
 	log.Infof("Device List: %v", devs)
-	log.Infof("Device Topology: %v", gpuTopology)
+	
+	// log device topology
+	for gpu1, temp := range gpuTopology {
+		for gpu2, topo := range temp {
+			log.Infof("Device Topology: GPU%v---GPU%v is %v", gpu1, gpu2, topo.String())
+		}
+	}
 	
 	err := patchGPUTopology(gpuTopology)
 	if err != nil {
@@ -86,7 +116,7 @@ func (m *NvidiaDevicePlugin) GetDeviceNameByIndex(index uint) (name string, foun
 		}
 		log.Infof("Get devIndexMap: %v", m.devIndxMap)
 	}
-	
+
 	name, found = m.devIndxMap[index]
 	return name, found
 }

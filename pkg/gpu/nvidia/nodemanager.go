@@ -3,12 +3,12 @@ package nvidia
 import (
 	"os"
 
+	"fmt"
 	log "github.com/golang/glog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"fmt"
 )
 
 var (
@@ -59,8 +59,8 @@ func patchGPUTopology(topology gpuTopology) error {
 	newNode := node.DeepCopy()
 	for gpu1, temp := range topology {
 		for gpu2, topo := range temp {
-			envGsocGpuTopology := ENV_GOSC_GPU_TOPOLOGY_PRIFIX + fmt.Sprintf("_%d",gpu1 )+ fmt.Sprintf("_%d",gpu2)
-			newNode.ObjectMeta.Annotations[envGsocGpuTopology] = fmt.Sprint(uint(topo))
+			envGsocGpuTopology := ENV_GPU_TOPOLOGY_PRIFIX + fmt.Sprintf("_%s", topo.Abbreviation()) + fmt.Sprintf("_%d", gpu1) + fmt.Sprintf("_%d", gpu2)
+			newNode.ObjectMeta.Annotations[envGsocGpuTopology] = topo.String()
 		}
 	}
 
