@@ -300,7 +300,7 @@ func (m *NvidiaDevicePlugin) Serve() error {
 		m.Stop()
 		return err
 	}
-	log.Infof("Registered device plugin with Kubelet")
+	log.Infof("Registered device plugin with Kubelet: %v", resourceName)
 
 	return nil
 }
