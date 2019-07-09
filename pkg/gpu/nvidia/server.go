@@ -3,11 +3,11 @@
 package nvidia
 
 import (
-	"fmt"
 	"net"
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/nvml"
@@ -38,6 +38,7 @@ type NvidiaDevicePlugin struct {
 	health chan *pluginapi.Device
 
 	server *grpc.Server
+	sync.RWMutex
 }
 
 // gpuTopologyType
@@ -83,14 +84,14 @@ func NewNvidiaDevicePlugin() *NvidiaDevicePlugin {
 	gpuTopology := getGpuTopology()
 
 	log.Infof("Device List: %v", devs)
-	
+
 	// log device topology
 	for gpu1, temp := range gpuTopology {
 		for gpu2, topo := range temp {
 			log.Infof("Device Topology: GPU%v---GPU%v is %v", gpu1, gpu2, topo.String())
 		}
 	}
-	
+
 	err := patchGPUTopology(gpuTopology)
 	if err != nil {
 		log.Infof("Failed due to %v", err)
@@ -223,29 +224,6 @@ func (m *NvidiaDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.Device
 
 func (m *NvidiaDevicePlugin) unhealthy(dev *pluginapi.Device) {
 	m.health <- dev
-}
-
-// Allocate which return list of devices.
-func (m *NvidiaDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.AllocateRequest) (*pluginapi.AllocateResponse, error) {
-	devs := m.devs
-	responses := pluginapi.AllocateResponse{}
-	for _, req := range reqs.ContainerRequests {
-		response := pluginapi.ContainerAllocateResponse{
-			Envs: map[string]string{
-				"NVIDIA_VISIBLE_DEVICES": strings.Join(req.DevicesIDs, ","),
-			},
-		}
-
-		for _, id := range req.DevicesIDs {
-			if !deviceExists(devs, id) {
-				return nil, fmt.Errorf("invalid allocation request: unknown device: %s", id)
-			}
-		}
-
-		responses.ContainerResponses = append(responses.ContainerResponses, &response)
-	}
-
-	return &responses, nil
 }
 
 func (m *NvidiaDevicePlugin) PreStartContainer(context.Context, *pluginapi.PreStartContainerRequest) (*pluginapi.PreStartContainerResponse, error) {
