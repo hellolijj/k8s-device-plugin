@@ -38,6 +38,7 @@ func getAssumeTimeFromPodAnnotation(pod *v1.Pod) (assumeTime uint64) {
 func getGPUIDsFromPodAnnotation(pod *v1.Pod) (ids string) {
 	if len(pod.ObjectMeta.Annotations) > 0 {
 		value, found := pod.ObjectMeta.Annotations[EnvResourceIndex]
+		log.Warningf("Failed to get the dev ", pod.ObjectMeta.Annotations[EnvResourceIndex])
 		if found && len(value) != 0 {
 			ids = value
 		} else {

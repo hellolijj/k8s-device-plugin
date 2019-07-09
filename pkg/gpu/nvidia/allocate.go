@@ -69,7 +69,7 @@ func (m *NvidiaDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.Alloc
 
 	for _, pod := range pods {
 		if getGPUCountFromPodResource(pod) == podReqGPU {
-			log.Infof("Found Assumed GPU shared Pod %s in ns %s with GPU Memory %d",
+			log.Infof("Found Assumed GPU shared Pod %s in ns %s with GPU %d",
 				pod.Name,
 				pod.Namespace,
 				podReqGPU)
@@ -81,6 +81,7 @@ func (m *NvidiaDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.Alloc
 
 	if found {
 		ids := getGPUIDsFromPodAnnotation(assumePod)
+		
 		if len(ids) == 0 {
 			log.Warningf("Failed to get the dev ", assumePod)
 		}
