@@ -39,7 +39,13 @@ func getDevices() []*pluginapi.Device {
 func getGpuTopology() gpuTopology {
 	n, err := nvml.GetDeviceCount()
 	check(err)
-	topology := make(gpuTopology)
+	
+	// init gpuTopology
+	topology := make([][]gpuTopologyType, n)
+	for i := 0; i < int(n); i++ {
+		topology[i] = make([]gpuTopologyType, n)
+	}
+	
 	var devs []*nvml.Device
 
 	for i := uint(0); i < n; i++ {
@@ -51,9 +57,17 @@ func getGpuTopology() gpuTopology {
 	for i := 0; i < int(n); i++ {
 		for j := 0; j < int(n); j++ {
 			if (i != j) {
-				t, err := nvml.GetP2PLink(devs[i], devs[j])
+				p2plink, err := nvml.GetP2PLink(devs[i], devs[j])
 				check(err)
-				topology[uint(i)] = map[uint]gpuTopologyType{uint(j): gpuTopologyType(t)}
+				if p2plink != nvml.P2PLinkUnknown {
+					topology[i][j] = gpuTopologyType(p2plink)
+				}
+				nvlink, err := nvml.GetNVLink(devs[i], devs[j])
+				check(err)
+				if nvlink != nvml.P2PLinkUnknown {
+					topology[i][j] = gpuTopologyType(nvlink)
+				}
+				log.Printf("Warning: gpu%v == gpu%v topogoloy is: %v, description is %v", i, j, gpuTopologyType(nvlink).Abbreviation(), gpuTopologyType(nvlink).String())
 			}
 		}
 	}

@@ -64,12 +64,21 @@ func (t gpuTopologyType) Abbreviation() string {
 		return "NODE"
 	case nvml.P2PLinkCrossCPU:
 		return "SYS"
+	case nvml.SingleNVLINKLink:
+		return "NV1"
+	case nvml.TwoNVLINKLinks:
+		return "NV2"
+	case nvml.ThreeNVLINKLinks:
+		return "NV3"
+	case nvml.FourNVLINKLinks:
+		return "NV4"
+	case nvml.P2PLinkUnknown:
 	}
 	return "N-A"
 }
 
 // gpuTopology
-type gpuTopology map[uint]map[uint]gpuTopologyType
+type gpuTopology [][]gpuTopologyType
 
 // NewNvidiaDevicePlugin returns an initialized NvidiaDevicePlugin
 func NewNvidiaDevicePlugin() *NvidiaDevicePlugin {
@@ -88,7 +97,9 @@ func NewNvidiaDevicePlugin() *NvidiaDevicePlugin {
 	// log device topology
 	for gpu1, temp := range gpuTopology {
 		for gpu2, topo := range temp {
-			log.Infof("Device Topology: GPU%v---GPU%v is %v", gpu1, gpu2, topo.String())
+			if gpu1 != gpu2 {
+				log.Infof("Device Topology: GPU%v---GPU%v is %v", gpu1, gpu2, topo.String())
+			}
 		}
 	}
 
