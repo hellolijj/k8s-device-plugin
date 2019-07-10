@@ -50,9 +50,11 @@ func getGpuTopology() gpuTopology {
 
 	for i := 0; i < int(n); i++ {
 		for j := 0; j < int(n); j++ {
-			t, err := nvml.GetP2PLink(devs[i], devs[j])
-			check(err)
-			topology[uint(i)] = map[uint]gpuTopologyType{uint(i): gpuTopologyType(t)}
+			if (i != j) {
+				t, err := nvml.GetP2PLink(devs[i], devs[j])
+				check(err)
+				topology[uint(i)] = map[uint]gpuTopologyType{uint(j): gpuTopologyType(t)}
+			}
 		}
 	}
 
