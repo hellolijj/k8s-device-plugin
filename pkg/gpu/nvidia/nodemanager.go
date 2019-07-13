@@ -1,9 +1,9 @@
 package nvidia
 
 import (
+	"fmt"
 	"os"
 
-	"fmt"
 	log "github.com/golang/glog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -59,8 +59,10 @@ func patchGPUTopology(topology gpuTopology) error {
 	newNode := node.DeepCopy()
 	for gpu1, temp := range topology {
 		for gpu2, topo := range temp {
-			envGsocGpuTopology := ENV_GPU_TOPOLOGY_PRIFIX + fmt.Sprintf("_%s", topo.Abbreviation()) + fmt.Sprintf("_%d", gpu1) + fmt.Sprintf("_%d", gpu2)
-			newNode.ObjectMeta.Annotations[envGsocGpuTopology] = topo.String()
+			if gpu1 != gpu2 {
+				envGsocGpuTopology := ENV_GPU_TOPOLOGY_PRIFIX + fmt.Sprintf("_%s", topo.Abbreviation()) + fmt.Sprintf("_%d", gpu1) + fmt.Sprintf("_%d", gpu2)
+				newNode.ObjectMeta.Annotations[envGsocGpuTopology] = topo.String()
+			}
 		}
 	}
 
