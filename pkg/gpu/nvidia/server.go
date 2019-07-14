@@ -94,15 +94,6 @@ func NewNvidiaDevicePlugin() *NvidiaDevicePlugin {
 
 	log.Infof("Device List: %v", devs)
 
-	// log device topology
-	for gpu1, temp := range gpuTopology {
-		for gpu2, topo := range temp {
-			if gpu1 != gpu2 {
-				log.Infof("Device Topology: GPU%v---GPU%v is %v", gpu1, gpu2, topo.String())
-			}
-		}
-	}
-
 	err := patchGPUTopology(gpuTopology)
 	if err != nil {
 		log.Infof("Failed due to %v", err)

@@ -56,7 +56,7 @@ func getGpuTopology() gpuTopology {
 
 	for i := 0; i < int(n); i++ {
 		for j := 0; j < int(n); j++ {
-			if (i != j) {
+			if (i < j) {
 				p2plink, err := nvml.GetP2PLink(devs[i], devs[j])
 				check(err)
 				if p2plink != nvml.P2PLinkUnknown {
