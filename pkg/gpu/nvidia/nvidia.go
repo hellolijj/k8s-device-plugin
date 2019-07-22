@@ -67,7 +67,8 @@ func getGpuTopology() gpuTopology {
 				if nvlink != nvml.P2PLinkUnknown {
 					topology[i][j] = gpuTopologyType(nvlink)
 				}
-				log.Printf("Warning: gpu%v == gpu%v topogoloy is: %v, description is %v", i, j, gpuTopologyType(nvlink).Abbreviation(), gpuTopologyType(nvlink).String())
+				
+				log.Printf("Warning: gpu%v == gpu%v topogoloy is: %v, description is %v, origin value %v", i, j, gpuTopologyType(topology[i][j]).Abbreviation(), gpuTopologyType(topology[i][j]).String(), gpuTopologyType(topology[i][j]))
 			}
 		}
 	}

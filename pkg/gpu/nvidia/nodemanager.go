@@ -9,6 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"encoding/json"
 )
 
 var (
@@ -57,14 +58,31 @@ func patchGPUTopology(topology gpuTopology) error {
 	}
 
 	newNode := node.DeepCopy()
+	envGPUTopologyMap := map[string]string{}
 	for gpu1, temp := range topology {
 		for gpu2, topo := range temp {
 			if gpu1 < gpu2 {
-				envGsocGpuTopology := ENV_GPU_TOPOLOGY_PRIFIX + fmt.Sprintf("_%s", topo.Abbreviation()) + fmt.Sprintf("_%d", gpu1) + fmt.Sprintf("_%d", gpu2)
-				newNode.ObjectMeta.Annotations[envGsocGpuTopology] = topo.String()
+				envGPUTopologyMap[ENV_GPU_TOPOLOGY_PRIFIX + fmt.Sprintf("_%s", topo.Abbreviation()) + fmt.Sprintf("_%d", gpu1) + fmt.Sprintf("_%d", gpu2)] = topo.String()
 			}
 		}
 	}
+	
+	// no gpu topo
+	if len(envGPUTopologyMap) == 0 {
+		return nil
+	}
+	
+	envGPUTopologyJson, err := json.Marshal(envGPUTopologyMap)
+	
+	log.Infof("invalid gpu topology map %v", envGPUTopologyMap)
+	
+	if err != nil {
+		return err
+	}
+	
+	log.Infof("gpu topology json %v", string(envGPUTopologyJson))
+	
+	newNode.ObjectMeta.Annotations[EnvAnnotationKey] = string(envGPUTopologyJson)
 
 	_, err = clientset.CoreV1().Nodes().Update(newNode)
 	if err != nil {
