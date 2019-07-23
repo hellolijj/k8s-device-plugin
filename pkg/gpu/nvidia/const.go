@@ -11,4 +11,6 @@ const (
 	EnvAssignedFlag       = "ALIYUN_COM_GPU_ASSIGNED"
 	EnvResourceAssumeTime = "ALIYUN_COM_GPU_ASSUME_TIME"
 	EnvAnnotationKey      = "GPU_TOPOLOGY"
+	
+	EnvNodeType           = "NODE_TYPE"
 )

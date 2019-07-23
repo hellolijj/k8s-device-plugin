@@ -98,6 +98,11 @@ func NewNvidiaDevicePlugin() *NvidiaDevicePlugin {
 	if err != nil {
 		log.Infof("Failed due to %v", err)
 	}
+	
+	err = patchNodeType()
+	if err != nil {
+		log.Infof("failed patch node type for reason: %v", err)
+	}
 
 	return &NvidiaDevicePlugin{
 		devs:         devs,
