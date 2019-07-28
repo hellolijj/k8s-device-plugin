@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: gsoc-device-plugin-ds
+  name: gputopology-device-plugin-ds
   namespace: kube-system
 spec:
   template:
@@ -18,12 +18,12 @@ spec:
       nodeSelector:
         gputopology: "true"
       containers:
-      - image: registry.cn-hangzhou.aliyuncs.com/lijj/gputopology-device-plugin:v1
+      - image: registry.cn-hangzhou.aliyuncs.com/lijj/gputopology-device-plugin:v2
 #        imagePullPolicy: IfNotPresent
         name: gpushare
         # Make this pod as Guaranteed pod which will never be evicted because of node's resource consumption.
         command:
-          - gsoc-device-plugin
+          - gputopology-device-plugin
           - -logtostderr
           - --v=5
           - --memory-unit=GiB
